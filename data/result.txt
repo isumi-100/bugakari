@@ -1,0 +1,424 @@
+'4-1.csv': Direct column match. Adding to combine list.
+'4-2.csv': Required column '所要量' not found. Skipping.
+'5-1.csv': Required column '単位' not found. Skipping.
+'6-1.csv': Required column '単位' not found. Skipping.
+'6-2.csv': Direct column match. Adding to combine list.
+'7-1.csv': Direct column match. Adding to combine list.
+'7-2.csv': Direct column match. Adding to combine list.
+'7-3.csv': Direct column match. Adding to combine list.
+'7-4.csv': Direct column match. Adding to combine list.
+'7-5.csv': Direct column match. Adding to combine list.
+'8-1.csv': Direct column match. Adding to combine list.
+'8-2.csv': Direct column match. Adding to combine list.
+'8-3.csv': Direct column match. Adding to combine list.
+'8-4.csv': Direct column match. Adding to combine list.
+'9-1.csv': Direct column match. Adding to combine list.
+'9-2.csv': Direct column match. Adding to combine list.
+'9-3.csv': Direct column match. Adding to combine list.
+'9-4.csv': Direct column match. Adding to combine list.
+'9-5.csv': Direct column match. Adding to combine list.
+'10-1.csv': Contains newline character in its cells. Skipping.
+'10-2.csv': Contains newline character in its cells. Skipping.
+'10-3.csv': Direct column match. Adding to combine list.
+'10-4.csv': Direct column match. Adding to combine list.
+'11-1.csv': '作業名' column contains empty cells. Skipping.
+'11-2.csv': '作業名' column contains empty cells. Skipping.
+'11-3.csv': '作業名' column contains empty cells. Skipping.
+'11-4.csv': Direct column match. Adding to combine list.
+'12-1.csv': Direct column match. Adding to combine list.
+'12-2.csv': Direct column match. Adding to combine list.
+'12-3.csv': Direct column match. Adding to combine list.
+'13-1.csv': Direct column match. Adding to combine list.
+'13-2.csv': Direct column match. Adding to combine list.
+'13-3.csv': Direct column match. Adding to combine list.
+'13-4.csv': Direct column match. Adding to combine list.
+'13-5.csv': Direct column match. Adding to combine list.
+'13-6.csv': Direct column match. Adding to combine list.
+'14-1.csv': Direct column match. Adding to combine list.
+'14-2.csv': Direct column match. Adding to combine list.
+'14-3.csv': Direct column match. Adding to combine list.
+'14-4.csv': Direct column match. Adding to combine list.
+'15-1.csv': Direct column match. Adding to combine list.
+'15-2.csv': Contains newline character in its cells. Skipping.
+'15-3.csv': Contains newline character in its cells. Skipping.
+'16-1.csv': Contains newline character in its cells. Skipping.
+'16-2.csv': Required column '単位' not found. Skipping.
+'16-3.csv': Contains newline character in its cells. Skipping.
+'17-1.csv': Contains newline character in its cells. Skipping.
+'17-2.csv': Required column '単位' not found. Skipping.
+'18-1.csv': Required column '単位' not found. Skipping.
+'18-2.csv': Required column '単位' not found. Skipping.
+'18-3.csv': Required column '単位' not found. Skipping.
+'18-4.csv': Required column '単位' not found. Skipping.
+'18-5.csv': Direct column match. Adding to combine list.
+'19-1.csv': Direct column match. Adding to combine list.
+'19-2.csv': Required column '単位' not found. Skipping.
+'19-3.csv': Direct column match. Adding to combine list.
+'19-4.csv': Contains newline character in its cells. Skipping.
+'20-1.csv': Required column '所要量' not found. Skipping.
+'20-2.csv': Columns do not match expected format. Skipping.
+'20-3.csv': Required column '単位' not found. Skipping.
+'20-4.csv': Contains newline character in its cells. Skipping.
+'21-1.csv': Required column '所要量' not found. Skipping.
+'21-2.csv': '作業名' column contains empty cells. Skipping.
+'22-1.csv': Required column '単位' not found. Skipping.
+'22-2.csv': Required column '単位' not found. Skipping.
+'22-3.csv': Required column '単位' not found. Skipping.
+'23-1.csv': Contains newline character in its cells. Skipping.
+'23-2.csv': Required column '所要量' not found. Skipping.
+'23-3.csv': Required column '単位' not found. Skipping.
+'24-1.csv': Contains newline character in its cells. Skipping.
+'24-2.csv': Required column '所要量' not found. Skipping.
+'24-3.csv': Required column '単位' not found. Skipping.
+'24-4.csv': Required column '所要量' not found. Skipping.
+'25-1.csv': Required column '所要量' not found. Skipping.
+'25-2.csv': Required column '所要量' not found. Skipping.
+'26-1.csv': Required column '単位' not found. Skipping.
+'26-2.csv': Contains newline character in its cells. Skipping.
+'26-3.csv': Contains newline character in its cells. Skipping.
+'27-1.csv': Contains newline character in its cells. Skipping.
+'27-2.csv': Contains newline character in its cells. Skipping.
+'28-1.csv': Contains newline character in its cells. Skipping.
+'28-2.csv': Contains newline character in its cells. Skipping.
+'28-3.csv': '作業名' column contains empty cells. Skipping.
+'29-1.csv': Contains newline character in its cells. Skipping.
+'30-1.csv': Contains newline character in its cells. Skipping.
+'31-1.csv': Contains newline character in its cells. Skipping.
+'31-2.csv': Required column '所要量' not found. Skipping.
+'31-3.csv': Required column '所要量' not found. Skipping.
+'32-1.csv': Required column '所要量' not found. Skipping.
+'33-1.csv': Required column '単位' not found. Skipping.
+'33-2.csv': Required column '単位' not found. Skipping.
+'33-3.csv': '作業名' column contains empty cells. Skipping.
+'33-4.csv': Direct column match. Adding to combine list.
+'34-1.csv': Required column '所要量' not found. Skipping.
+'34-2.csv': Contains newline character in its cells. Skipping.
+'35-1.csv': '単位' column contains empty cells. Skipping.
+'35-2.csv': Required column '単位' not found. Skipping.
+'36-1.csv': Required column '単位' not found. Skipping.
+'37-1.csv': Contains newline character in its cells. Skipping.
+'38-1.csv': Required column '所要量' not found. Skipping.
+'38-2.csv': Contains newline character in its cells. Skipping.
+'39-1.csv': '作業名' column contains empty cells. Skipping.
+'39-2.csv': Contains newline character in its cells. Skipping.
+'40-1.csv': Contains newline character in its cells. Skipping.
+'40-2.csv': Required column '単位' not found. Skipping.
+'40-3.csv': Contains newline character in its cells. Skipping.
+'41-1.csv': '作業名' column contains empty cells. Skipping.
+'42-1.csv': Required column '単位' not found. Skipping.
+'42-2.csv': Contains newline character in its cells. Skipping.
+'43-1.csv': Contains newline character in its cells. Skipping.
+'43-2.csv': Required column '単位' not found. Skipping.
+'44-1.csv': Required column '単位' not found. Skipping.
+'44-2.csv': Required column '所要量' not found. Skipping.
+'45-1.csv': Required column '単位' not found. Skipping.
+'46-1.csv': Required column '単位' not found. Skipping.
+'46-2.csv': Required column '単位' not found. Skipping.
+'47-1.csv': Required column '所要量' not found. Skipping.
+'47-2.csv': Contains newline character in its cells. Skipping.
+'47-3.csv': Required column '所要量' not found. Skipping.
+'48-1.csv': Required column '単位' not found. Skipping.
+'49-1.csv': Required column '単位' not found. Skipping.
+'50-1.csv': Required column '所要量' not found. Skipping.
+'50-2.csv': Required column '所要量' not found. Skipping.
+'51-1.csv': Contains newline character in its cells. Skipping.
+'51-2.csv': Contains newline character in its cells. Skipping.
+'52-1.csv': Required column '所要量' not found. Skipping.
+'52-2.csv': Required column '所要量' not found. Skipping.
+'53-1.csv': Required column '所要量' not found. Skipping.
+'53-2.csv': Required column '所要量' not found. Skipping.
+'53-3.csv': Required column '所要量' not found. Skipping.
+'54-1.csv': Required column '所要量' not found. Skipping.
+'54-2.csv': Required column '所要量' not found. Skipping.
+'54-3.csv': Required column '所要量' not found. Skipping.
+'55-1.csv': Required column '所要量' not found. Skipping.
+'55-2.csv': Required column '所要量' not found. Skipping.
+'55-3.csv': Direct column match. Adding to combine list.
+'56-1.csv': Required column '所要量' not found. Skipping.
+'56-2.csv': '作業名' column contains empty cells. Skipping.
+'57-1.csv': '作業名' column contains empty cells. Skipping.
+'57-2.csv': '作業名' column contains empty cells. Skipping.
+'57-3.csv': Required column '所要量' not found. Skipping.
+'57-4.csv': Required column '所要量' not found. Skipping.
+'58-1.csv': Required column '所要量' not found. Skipping.
+'58-2.csv': '作業名' column contains empty cells. Skipping.
+'58-3.csv': '作業名' column contains empty cells. Skipping.
+'58-4.csv': Required column '所要量' not found. Skipping.
+'59-1.csv': '作業名' column contains empty cells. Skipping.
+'59-2.csv': '作業名' column contains empty cells. Skipping.
+'59-3.csv': Contains newline character in its cells. Skipping.
+'60-1.csv': Required column '所要量' not found. Skipping.
+'60-2.csv': Required column '所要量' not found. Skipping.
+'60-3.csv': Required column '所要量' not found. Skipping.
+'60-4.csv': Required column '所要量' not found. Skipping.
+'61-1.csv': '作業名' column contains empty cells. Skipping.
+'61-2.csv': '作業名' column contains empty cells. Skipping.
+'62-1.csv': Required column '所要量' not found. Skipping.
+'63-1.csv': '作業名' column contains empty cells. Skipping.
+'63-2.csv': Required column '所要量' not found. Skipping.
+'63-3.csv': Contains newline character in its cells. Skipping.
+'64-1.csv': Required column '所要量' not found. Skipping.
+'64-2.csv': '単位' column contains empty cells. Skipping.
+'64-3.csv': Required column '単位' not found. Skipping.
+'65-1.csv': Required column '所要量' not found. Skipping.
+'65-2.csv': Required column '所要量' not found. Skipping.
+'65-3.csv': Contains newline character in its cells. Skipping.
+'66-1.csv': Contains newline character in its cells. Skipping.
+'66-2.csv': Contains newline character in its cells. Skipping.
+'66-3.csv': Contains newline character in its cells. Skipping.
+'67-1.csv': '作業名' column contains empty cells. Skipping.
+'67-2.csv': '単位' column contains empty cells. Skipping.
+'67-3.csv': Required column '所要量' not found. Skipping.
+'68-1.csv': Direct column match. Adding to combine list.
+'68-2.csv': Contains newline character in its cells. Skipping.
+'69-1.csv': Contains newline character in its cells. Skipping.
+'69-2.csv': '作業名' column contains empty cells. Skipping.
+'70-1.csv': Direct column match. Adding to combine list.
+'70-2.csv': Required column '所要量' not found. Skipping.
+'71-1.csv': '作業名' column contains empty cells. Skipping.
+'71-2.csv': '作業名' column contains empty cells. Skipping.
+'71-3.csv': Required column '所要量' not found. Skipping.
+'72-1.csv': Contains newline character in its cells. Skipping.
+'72-2.csv': '作業名' column contains empty cells. Skipping.
+'73-1.csv': Contains newline character in its cells. Skipping.
+'73-2.csv': '作業名' column contains empty cells. Skipping.
+'73-3.csv': '作業名' column contains empty cells. Skipping.
+'74-1.csv': Contains newline character in its cells. Skipping.
+'74-2.csv': Contains newline character in its cells. Skipping.
+'75-1.csv': Required column '所要量' not found. Skipping.
+'75-2.csv': Required column '所要量' not found. Skipping.
+'75-3.csv': Contains newline character in its cells. Skipping.
+'76-1.csv': '作業名' column contains empty cells. Skipping.
+'76-2.csv': Required column '所要量' not found. Skipping.
+'76-3.csv': '作業名' column contains empty cells. Skipping.
+'76-4.csv': '作業名' column contains empty cells. Skipping.
+'77-1.csv': Required column '所要量' not found. Skipping.
+'77-2.csv': Direct column match. Adding to combine list.
+'77-3.csv': Required column '所要量' not found. Skipping.
+'78-1.csv': Contains newline character in its cells. Skipping.
+'78-2.csv': '単位' column contains empty cells. Skipping.
+'79-1.csv': Required column '所要量' not found. Skipping.
+'79-2.csv': Direct column match. Adding to combine list.
+'80-1.csv': Required column '所要量' not found. Skipping.
+'80-2.csv': Contains newline character in its cells. Skipping.
+'81-1.csv': '作業名' column contains empty cells. Skipping.
+'81-2.csv': Required column '所要量' not found. Skipping.
+'82-1.csv': Required column '所要量' not found. Skipping.
+'82-2.csv': Required column '単位' not found. Skipping.
+'82-3.csv': Required column '単位' not found. Skipping.
+'83-1.csv': Required column '単位' not found. Skipping.
+'83-2.csv': Required column '単位' not found. Skipping.
+'84-1.csv': Direct column match. Adding to combine list.
+'84-2.csv': Required column '所要量' not found. Skipping.
+'84-3.csv': Direct column match. Adding to combine list.
+'84-4.csv': Direct column match. Adding to combine list.
+'85-1.csv': Required column '所要量' not found. Skipping.
+'85-2.csv': Required column '単位' not found. Skipping.
+'85-3.csv': '作業名' column contains empty cells. Skipping.
+'86-1.csv': Required column '単位' not found. Skipping.
+'86-2.csv': '作業名' column contains empty cells. Skipping.
+'88-1.csv': Required column '単位' not found. Skipping.
+'89-1.csv': Contains newline character in its cells. Skipping.
+'90-1.csv': '作業名' column contains empty cells. Skipping.
+'90-2.csv': '作業名' column contains empty cells. Skipping.
+'91-1.csv': Direct column match. Adding to combine list.
+'91-2.csv': '作業名' column contains empty cells. Skipping.
+'91-3.csv': '作業名' column contains empty cells. Skipping.
+'92-1.csv': Contains newline character in its cells. Skipping.
+'92-2.csv': '作業名' column contains empty cells. Skipping.
+'92-3.csv': Required column '単位' not found. Skipping.
+'92-4.csv': Direct column match. Adding to combine list.
+'92-5.csv': Contains newline character in its cells. Skipping.
+'93-1.csv': Required column '単位' not found. Skipping.
+'93-2.csv': Required column '単位' not found. Skipping.
+'93-3.csv': Direct column match. Adding to combine list.
+'93-4.csv': Direct column match. Adding to combine list.
+'94-1.csv': Direct column match. Adding to combine list.
+'94-2.csv': Contains newline character in its cells. Skipping.
+'94-3.csv': Required column '所要量' not found. Skipping.
+'94-4.csv': Required column '所要量' not found. Skipping.
+'95-1.csv': Required column '単位' not found. Skipping.
+'95-2.csv': Required column '単位' not found. Skipping.
+'95-3.csv': Required column '所要量' not found. Skipping.
+'96-1.csv': Required column '単位' not found. Skipping.
+'96-2.csv': Required column '単位' not found. Skipping.
+'98-1.csv': Contains newline character in its cells. Skipping.
+'99-1.csv': Contains newline character in its cells. Skipping.
+'99-2.csv': Contains newline character in its cells. Skipping.
+'99-3.csv': Contains newline character in its cells. Skipping.
+'100-1.csv': Contains newline character in its cells. Skipping.
+'101-1.csv': Contains newline character in its cells. Skipping.
+'101-2.csv': Contains newline character in its cells. Skipping.
+'102-1.csv': Required column '単位' not found. Skipping.
+'102-2.csv': Required column '単位' not found. Skipping.
+'102-3.csv': Required column '単位' not found. Skipping.
+'102-4.csv': Contains newline character in its cells. Skipping.
+'103-1.csv': Contains newline character in its cells. Skipping.
+'104-1.csv': Contains newline character in its cells. Skipping.
+'104-2.csv': Contains newline character in its cells. Skipping.
+'104-3.csv': Contains newline character in its cells. Skipping.
+'104-4.csv': Contains newline character in its cells. Skipping.
+'105-1.csv': Contains newline character in its cells. Skipping.
+'107-1.csv': Contains newline character in its cells. Skipping.
+'108-1.csv': Contains newline character in its cells. Skipping.
+'108-2.csv': Contains newline character in its cells. Skipping.
+'109-1.csv': Contains newline character in its cells. Skipping.
+'110-1.csv': Contains newline character in its cells. Skipping.
+'111-1.csv': Contains newline character in its cells. Skipping.
+'112-1.csv': Contains newline character in its cells. Skipping.
+'113-1.csv': Contains newline character in its cells. Skipping.
+'113-2.csv': Contains newline character in its cells. Skipping.
+'114-1.csv': Contains newline character in its cells. Skipping.
+'115-1.csv': Contains newline character in its cells. Skipping.
+'115-2.csv': Contains newline character in its cells. Skipping.
+'116-1.csv': Contains newline character in its cells. Skipping.
+'117-1.csv': Contains newline character in its cells. Skipping.
+'118-1.csv': Contains newline character in its cells. Skipping.
+'119-1.csv': Required column '単位' not found. Skipping.
+'120-1.csv': Contains newline character in its cells. Skipping.
+'121-1.csv': Contains newline character in its cells. Skipping.
+'122-1.csv': Contains newline character in its cells. Skipping.
+'123-1.csv': Required column '単位' not found. Skipping.
+'126-1.csv': Contains newline character in its cells. Skipping.
+'127-1.csv': Contains newline character in its cells. Skipping.
+'128-1.csv': Contains newline character in its cells. Skipping.
+'128-2.csv': Contains newline character in its cells. Skipping.
+'129-1.csv': Contains newline character in its cells. Skipping.
+'129-2.csv': Required column '単位' not found. Skipping.
+'130-1.csv': Contains newline character in its cells. Skipping.
+'130-2.csv': Required column '単位' not found. Skipping.
+'131-1.csv': Contains newline character in its cells. Skipping.
+'132-1.csv': Contains newline character in its cells. Skipping.
+'133-1.csv': Contains newline character in its cells. Skipping.
+'134-1.csv': Contains newline character in its cells. Skipping.
+'135-1.csv': Required column '単位' not found. Skipping.
+'136-1.csv': Contains newline character in its cells. Skipping.
+'136-2.csv': Contains newline character in its cells. Skipping.
+'136-3.csv': Contains newline character in its cells. Skipping.
+'137-1.csv': Contains newline character in its cells. Skipping.
+'138-1.csv': Contains newline character in its cells. Skipping.
+'139-1.csv': Contains newline character in its cells. Skipping.
+'139-2.csv': Contains newline character in its cells. Skipping.
+'139-3.csv': Contains newline character in its cells. Skipping.
+'140-1.csv': Contains newline character in its cells. Skipping.
+'141-1.csv': Contains newline character in its cells. Skipping.
+'141-2.csv': Required column '単位' not found. Skipping.
+'141-3.csv': Contains newline character in its cells. Skipping.
+'142-1.csv': Contains newline character in its cells. Skipping.
+'143-1.csv': Contains newline character in its cells. Skipping.
+'143-2.csv': '作業名' column contains empty cells. Skipping.
+'143-3.csv': Contains newline character in its cells. Skipping.
+'143-4.csv': Required column '単位' not found. Skipping.
+'143-5.csv': Required column '単位' not found. Skipping.
+'144-1.csv': Contains newline character in its cells. Skipping.
+'144-2.csv': '作業名' column contains empty cells. Skipping.
+'144-3.csv': Contains newline character in its cells. Skipping.
+'144-4.csv': Required column '単位' not found. Skipping.
+'145-1.csv': Required column '単位' not found. Skipping.
+'146-1.csv': Contains newline character in its cells. Skipping.
+'147-1.csv': Contains newline character in its cells. Skipping.
+'148-1.csv': Contains newline character in its cells. Skipping.
+'148-2.csv': Required column '単位' not found. Skipping.
+'149-1.csv': Contains newline character in its cells. Skipping.
+'150-1.csv': Required column '単位' not found. Skipping.
+'151-1.csv': Contains newline character in its cells. Skipping.
+'152-1.csv': Contains newline character in its cells. Skipping.
+'152-2.csv': Contains newline character in its cells. Skipping.
+'152-3.csv': Contains newline character in its cells. Skipping.
+'153-1.csv': Contains newline character in its cells. Skipping.
+'153-2.csv': Contains newline character in its cells. Skipping.
+'153-3.csv': Required column '単位' not found. Skipping.
+'154-1.csv': Contains newline character in its cells. Skipping.
+'154-2.csv': Contains newline character in its cells. Skipping.
+'155-1.csv': Contains newline character in its cells. Skipping.
+'155-2.csv': Contains newline character in its cells. Skipping.
+'156-1.csv': Contains newline character in its cells. Skipping.
+'157-1.csv': Contains newline character in its cells. Skipping.
+'157-2.csv': Contains newline character in its cells. Skipping.
+'157-3.csv': Contains newline character in its cells. Skipping.
+'158-1.csv': Contains newline character in its cells. Skipping.
+'158-2.csv': Contains newline character in its cells. Skipping.
+'158-3.csv': Contains newline character in its cells. Skipping.
+'159-1.csv': Contains newline character in its cells. Skipping.
+'159-2.csv': Contains newline character in its cells. Skipping.
+'159-3.csv': Contains newline character in its cells. Skipping.
+'160-1.csv': Contains newline character in its cells. Skipping.
+'160-2.csv': Contains newline character in its cells. Skipping.
+'161-1.csv': Contains newline character in its cells. Skipping.
+'161-2.csv': Required column '単位' not found. Skipping.
+'162-1.csv': Required column '単位' not found. Skipping.
+'163-1.csv': Required column '単位' not found. Skipping.
+'164-1.csv': Contains newline character in its cells. Skipping.
+'165-1.csv': Contains newline character in its cells. Skipping.
+'166-1.csv': Required column '単位' not found. Skipping.
+'167-1.csv': Required column '単位' not found. Skipping.
+'168-1.csv': Contains newline character in its cells. Skipping.
+'169-1.csv': Contains newline character in its cells. Skipping.
+'169-2.csv': Contains newline character in its cells. Skipping.
+'169-3.csv': Contains newline character in its cells. Skipping.
+'170-1.csv': Contains newline character in its cells. Skipping.
+'170-2.csv': Contains newline character in its cells. Skipping.
+'170-3.csv': Required column '単位' not found. Skipping.
+'171-1.csv': Required column '単位' not found. Skipping.
+'172-1.csv': Contains newline character in its cells. Skipping.
+'173-1.csv': Contains newline character in its cells. Skipping.
+'174-1.csv': Contains newline character in its cells. Skipping.
+'174-2.csv': Required column '単位' not found. Skipping.
+'175-1.csv': Contains newline character in its cells. Skipping.
+'176-1.csv': Required column '単位' not found. Skipping.
+'177-1.csv': Contains newline character in its cells. Skipping.
+'178-1.csv': Contains newline character in its cells. Skipping.
+'178-2.csv': Contains newline character in its cells. Skipping.
+'178-3.csv': Contains newline character in its cells. Skipping.
+'179-1.csv': Contains newline character in its cells. Skipping.
+'179-2.csv': Contains newline character in its cells. Skipping.
+'179-3.csv': Required column '単位' not found. Skipping.
+'180-1.csv': Required column '単位' not found. Skipping.
+'180-2.csv': Contains newline character in its cells. Skipping.
+'181-1.csv': Contains newline character in its cells. Skipping.
+'182-1.csv': Contains newline character in its cells. Skipping.
+'183-1.csv': Contains newline character in its cells. Skipping.
+'183-2.csv': Required column '単位' not found. Skipping.
+'184-1.csv': Contains newline character in its cells. Skipping.
+'184-2.csv': Required column '単位' not found. Skipping.
+'185-1.csv': Contains newline character in its cells. Skipping.
+'185-2.csv': Contains newline character in its cells. Skipping.
+'186-1.csv': Required column '単位' not found. Skipping.
+'186-2.csv': Contains newline character in its cells. Skipping.
+'187-1.csv': Required column '単位' not found. Skipping.
+'187-2.csv': Contains newline character in its cells. Skipping.
+'188-1.csv': Contains newline character in its cells. Skipping.
+'189-1.csv': Contains newline character in its cells. Skipping.
+'190-1.csv': Contains newline character in its cells. Skipping.
+'191-1.csv': Contains newline character in its cells. Skipping.
+'191-2.csv': Contains newline character in its cells. Skipping.
+'192-1.csv': Required column '単位' not found. Skipping.
+'192-2.csv': Contains newline character in its cells. Skipping.
+'193-1.csv': Contains newline character in its cells. Skipping.
+'193-2.csv': Contains newline character in its cells. Skipping.
+'194-1.csv': Required column '単位' not found. Skipping.
+'194-2.csv': Required column '単位' not found. Skipping.
+'195-1.csv': Contains newline character in its cells. Skipping.
+'195-2.csv': Required column '単位' not found. Skipping.
+'195-3.csv': Contains newline character in its cells. Skipping.
+'196-1.csv': Contains newline character in its cells. Skipping.
+'196-2.csv': Contains newline character in its cells. Skipping.
+'197-1.csv': Required column '単位' not found. Skipping.
+'197-2.csv': Contains newline character in its cells. Skipping.
+'197-3.csv': Required column '単位' not found. Skipping.
+'197-4.csv': Required column '単位' not found. Skipping.
+'198-1.csv': Contains newline character in its cells. Skipping.
+'199-1.csv': Contains newline character in its cells. Skipping.
+'200-1.csv': Contains newline character in its cells. Skipping.
+'200-2.csv': Contains newline character in its cells. Skipping.
+'201-1.csv': Required column '単位' not found. Skipping.
+'201-2.csv': Contains newline character in its cells. Skipping.
+'201-3.csv': Required column '単位' not found. Skipping.
+'202-1.csv': Contains newline character in its cells. Skipping.
+'203-1.csv': Contains newline character in its cells. Skipping.
+'204-1.csv': Contains newline character in its cells. Skipping.
+'205-1.csv': Contains newline character in its cells. Skipping.
+'206-1.csv': Contains newline character in its cells. Skipping.
+'207-1.csv': Contains newline character in its cells. Skipping.
+'208-1.csv': Contains newline character in its cells. Skipping.
+'209-1.csv': Contains newline character in its cells. Skipping.
