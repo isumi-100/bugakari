@@ -4,117 +4,62 @@ import re
 
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower()
-            for text in re.split('([0-9]+)', s)]
+            for text in re.split(r'([0-9]+)', s)]
 
-def process_csv_files(input_folder):
+def clean_cell_spaces(df):
     """
-    指定されたフォルダ内のCSVファイルを順番に読み込み、
-    カラム名の修正と特定の列の結合を行い、元のファイルを上書き保存します。
-
-    Args:
-        input_folder (str): CSVファイルが格納されているフォルダのパス。
+    各セルの全角・半角スペースを削除
     """
+    return df.applymap(lambda x: re.sub(r'[ 　]+', '', x) if isinstance(x, str) else x)
 
-    print(f"Processing CSV files in: {input_folder}\n")
+def process_csv_file(file_path):
+    """
+    1つのCSVファイルに対して前処理を行う。
+    セルのスペース除去を行い、上書き保存する。
+    """
+    try:
+        df = pd.read_csv(file_path, encoding='utf-8', dtype=str)
+        df_cleaned = clean_cell_spaces(df)
+        df_cleaned.to_csv(file_path, index=False, encoding='utf-8')
+        return True, None
+    except Exception as e:
+        return False, str(e)
 
-    csv_files = [f for f in os.listdir(input_folder) if f.endswith(".csv")]
-    csv_files.sort(key=natural_sort_key) # 自然順ソート
+def process_all_csvs(root_folder):
+    """
+    指定フォルダ以下のすべてのCSVファイルに対して前処理を実行する。
+    """
+    total_files = processed = errors = 0
 
-    total_files = len(csv_files)
-    processed_count = 0
-    skipped_count = 0
-    column_space_fixed_count = 0
-    remark_merged_count = 0
-    summary_merged_count = 0
-    error_count = 0
+    print(f"Processing CSV files under: {root_folder}\n")
 
-    if not csv_files:
-        print("No CSV files found in the specified folder.")
-        return
-
-    for filename in csv_files:
-        file_path = os.path.join(input_folder, filename)
-        print(f"--- Processing '{filename}' ---")
-        
-        try:
-            df = pd.read_csv(file_path, encoding='utf-8', dtype=str)
-            original_columns = df.columns.tolist()
-            modified_this_file = False
-
-            # 1. カラム名のスペースを削除
-            new_columns = [col.replace(' ', '').replace('　', '') for col in original_columns]
-            if new_columns != original_columns:
-                df.columns = new_columns
-                print(f"  > Column spaces removed. New columns: {df.columns.tolist()}")
-                column_space_fixed_count += 1
-                modified_this_file = True
-
-            # 2. 「備考」列の結合と名称変更
-            # カラム名を一旦スペース除去後のものに揃えてチェック
-            current_cols_no_space = [col.replace(' ', '').replace('　', '') for col in df.columns.tolist()]
-            
-            if '備' in current_cols_no_space and '考' in current_cols_no_space:
-                # 元のDataFrameのカラム名で'備'と'考'のインデックスを取得
-                idx_備 = current_cols_no_space.index('備')
-                idx_考 = current_cols_no_space.index('考')
-                original_備_col_name = original_columns[original_columns.index(df.columns[idx_備])]
-                original_考_col_name = original_columns[original_columns.index(df.columns[idx_考])]
-
-                if df[original_考_col_name].isnull().all() or (df[original_考_col_name] == '').all():
-                    df = df.drop(columns=[original_考_col_name])
-                    df = df.rename(columns={original_備_col_name: '備考'})
-                    print(f"  > Merged '{original_備_col_name}' and '{original_考_col_name}' into '備考'.")
-                    remark_merged_count += 1
-                    modified_this_file = True
-
-            # 3. 「摘要」列の結合と名称変更
-            # 再度カラム名をスペース除去後のものに揃えてチェック
-            current_cols_no_space = [col.replace(' ', '').replace('　', '') for col in df.columns.tolist()]
-            if '摘' in current_cols_no_space and '要' in current_cols_no_space:
-                # 元のDataFrameのカラム名で'摘'と'要'のインデックスを取得
-                idx_摘 = current_cols_no_space.index('摘')
-                idx_要 = current_cols_no_space.index('要')
-                original_摘_col_name = original_columns[original_columns.index(df.columns[idx_摘])]
-                original_要_col_name = original_columns[original_columns.index(df.columns[idx_要])]
-
-                if df[original_摘_col_name].isnull().all() or (df[original_摘_col_name] == '').all():
-                    df = df.drop(columns=[original_摘_col_name])
-                    df = df.rename(columns={original_要_col_name: '摘要'})
-                    print(f"  > Merged '{original_摘_col_name}' and '{original_要_col_name}' into '摘要'.")
-                    summary_merged_count += 1
-                    modified_this_file = True
-            
-            # 変更があった場合のみ上書き保存
-            if modified_this_file:
-                df.to_csv(file_path, index=False, encoding='utf-8')
-                print(f"  > '{filename}' has been **overwritten** with changes.")
-                processed_count += 1
+    for dirpath, _, filenames in os.walk(root_folder):
+        csv_files = sorted([f for f in filenames if f.endswith('.csv')], key=natural_sort_key)
+        for csv_file in csv_files:
+            file_path = os.path.join(dirpath, csv_file)
+            rel_path = os.path.relpath(file_path, root_folder)
+            total_files += 1
+            print(f"--- Processing: {rel_path}")
+            success, error = process_csv_file(file_path)
+            if success:
+                print(f"  > Cleaned and saved.")
+                processed += 1
             else:
-                print(f"  > No changes needed for '{filename}'.")
-                skipped_count += 1
+                print(f"  > ERROR: {error}")
+                errors += 1
+            print("-" * 40)
 
-        except Exception as e:
-            print(f"  > ERROR: Could not process '{filename}'. Reason: {e}")
-            error_count += 1
-            skipped_count += 1
-        print("-" * (len(filename) + 12)) # 区切り線
+    print("\n--- Summary ---")
+    print(f"Total CSV files found: {total_files}")
+    print(f"Successfully processed: {processed}")
+    print(f"Errors: {errors}")
 
-    print("\n--- Processing Summary ---")
-    print(f"Total files found: {total_files}")
-    print(f"Files processed (overwritten): {processed_count}")
-    print(f"Files skipped (no changes or errors): {skipped_count}")
-    print(f"  - Column spaces fixed in: {column_space_fixed_count} files")
-    print(f"  - '備考' column merged in: {remark_merged_count} files")
-    print(f"  - '摘要' column merged in: {summary_merged_count} files")
-    print(f"  - Files with errors: {error_count}")
-
-# --- 実行部分 ---
+# 実行部分
 if __name__ == "__main__":
-    input_folder_path = "../data/tables_from_docx" 
-
-    # フォルダが存在しない場合は作成
-    if not os.path.exists(input_folder_path):
-        os.makedirs(input_folder_path)
-        print(f"Created folder: {input_folder_path}. Please place your CSV files here.")
+    input_folder = "../tables_from_docx"
+    
+    if not os.path.exists(input_folder):
+        os.makedirs(input_folder)
+        print(f"Created folder: {input_folder}. Please place folders with CSV files here.")
     else:
-        process_csv_files(input_folder_path)
+        process_all_csvs(input_folder)

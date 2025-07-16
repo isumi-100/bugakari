@@ -3,203 +3,285 @@ import pandas as pd
 import os
 import re
 
-def extract_tables_from_docx(docx_path):
-    """
-    DOCXファイルからテーブルを抽出し、それぞれのテーブルをDataFrameとして返します。
-    「(注)」を含む行を見つけたら現在の表を終了します。
-    「表」を含む行が見つかったら、以下のルールで新しい表の開始を判断します。
-    1. その「表」を含む行の次の次の行に「単位」という文字が含まれる場合：
-       その「次の次の行」を新しい表の開始（ヘッダー）と判断し、
-       「表」を含む行の次の行の文字列を「作業名」とします。
-    2. 上記以外の場合（「次の次の行」に「単位」が含まれない場合）：
-       「表」を含む行の次の行を新しい表の開始（ヘッダー）と判断し、
-       「作業名」は空とします。
+# 定数としてテーブルタイプを定義
+TABLE_TYPE_HYO = "hyo"
+TABLE_TYPE_BETSU_HYO = "betsu_hyo"
+TABLE_TYPE_OTHER = "other_tables"
+TABLE_TYPE_NO_SPECIFIC_HEADER = "no_specific_header_tables"  # 新しいカテゴリ
 
-    ファイル内の最初の表に対しては、表の1つ前の段落の文字列を「作業名」として追加します。
-    「作業名」が存在しない場合は、その列を空として追加します。
-    """
+def create_dataframe_from_rows(rows, hyo_text, sagyome_text, note_text):
+    try:
+        df = pd.DataFrame(rows[1:], columns=rows[0])
+    except Exception as e:
+        print("DataFrame作成エラー:", e)
+        return None
+
+    if hyo_text:
+        df.insert(0, "表列", hyo_text)
+    if sagyome_text:
+        df.insert(1, "作業名列", sagyome_text)
+    if note_text:
+        df["注記"] = note_text
+
+    return df
+
+def extract_tables_from_docx(docx_path):
     document = docx.Document(docx_path)
     extracted_dfs = []
-    
+
     elements = []
     for block in document.element.body:
-        if block.tag.endswith('p'): # Paragraph
+        if block.tag.endswith('p'):
             elements.append({'type': 'paragraph', 'content': docx.text.paragraph.Paragraph(block, document)})
-        elif block.tag.endswith('tbl'): # Table
+        elif block.tag.endswith('tbl'):
             elements.append({'type': 'table', 'content': docx.table.Table(block, document)})
 
     for i, element in enumerate(elements):
         if element['type'] == 'table':
             table = element['content']
-            
-            # Base '作業名' for the very first segment of this docx.table.Table element
-            current_docx_table_preceding_text = "" 
-            if i > 0:
-                prev_element = elements[i - 1]
-                if prev_element['type'] == 'paragraph':
-                    current_docx_table_preceding_text = prev_element['content'].text.strip()
-            
+
+            prev_paragraph_1_text = ""
+            prev_paragraph_2_text = ""
+
+            if i > 0 and elements[i - 1]['type'] == 'paragraph':
+                prev_paragraph_1_text = elements[i - 1]['content'].text.strip()
+            if i > 1 and elements[i - 2]['type'] == 'paragraph':
+                prev_paragraph_2_text = elements[i - 2]['content'].text.strip()
+
+            initial_table_classification = TABLE_TYPE_OTHER
+            initial_sagyome_col_text = ""
+            initial_hyo_col_text = ""
+
+            if re.match(r'^(表|別表)', prev_paragraph_1_text):
+                initial_table_classification = TABLE_TYPE_HYO if "表" in prev_paragraph_1_text else TABLE_TYPE_BETSU_HYO
+                initial_hyo_col_text = prev_paragraph_1_text
+            elif not re.match(r'^(表|別表)', prev_paragraph_1_text) and re.match(r'^(表|別表)', prev_paragraph_2_text):
+                initial_table_classification = TABLE_TYPE_HYO if "表" in prev_paragraph_2_text else TABLE_TYPE_BETSU_HYO
+                initial_hyo_col_text = prev_paragraph_2_text
+                initial_sagyome_col_text = prev_paragraph_1_text
+            else:
+                initial_table_classification = TABLE_TYPE_NO_SPECIFIC_HEADER
+
             current_sub_table_rows = []
-            building_sub_table = False 
-            current_sub_table_work_name = "" # Stores the '作業名' for the table currently being built
-            
-            # Flags and buffers for looking ahead after "表"
-            found_hyo_marker_row_data = None # Stores data of the "表" row itself
-            row_after_hyo_row_data = None    # Stores data of the row immediately after "表" (Row A)
-            
-            # This flag tracks if the *current* sub-table segment is a result of a split
-            is_split_sub_table = False 
+            building_sub_table = False
+            current_sub_table_work_name_internal = ""
+            current_sub_table_note = ""
+
+            found_hyo_marker_row_data = None
+            row_after_hyo_row_data = None
+            is_split_by_marker = False
 
             for row_idx, row in enumerate(table.rows):
                 row_data = [cell.text.strip() for cell in row.cells]
                 combined_row_text = "".join(row_data)
+                first_cell_text = row_data[0] if row_data else ""
 
-                # --- Condition 1: End current table segment if "(注)" is found ---
+                starts_with_hyo_betsu_hyo_in_row = bool(re.match(r'^(表|別表)', first_cell_text))
+
                 if "(注)" in combined_row_text:
                     if building_sub_table and current_sub_table_rows:
-                        # Finalize the current table using its associated work name
-                        df = create_dataframe_from_rows(current_sub_table_rows, current_sub_table_work_name)
+                        note_text_list = []
+                        temp_note_row_idx = row_idx
+                        while temp_note_row_idx < len(table.rows):
+                            current_note_line_cells = [cell.text.strip() for cell in table.rows[temp_note_row_idx].cells]
+                            current_note_line_text = "".join(current_note_line_cells).strip()
+                            if not current_note_line_text or re.match(r'^(表|別表)', current_note_line_text):
+                                break
+                            note_text_list.append(current_note_line_text)
+                            temp_note_row_idx += 1
+
+                        cleaned_note_list = [line.replace("(注)", "").strip() for line in note_text_list if line.replace("(注)", "").strip()]
+                        current_sub_table_note = "\n".join(cleaned_note_list).strip()
+
+                        hyo_col_text = initial_hyo_col_text
+                        sagyome_col_text = initial_sagyome_col_text
+                        final_table_classification = initial_table_classification
+
+                        if is_split_by_marker:
+                            hyo_col_text = "".join(found_hyo_marker_row_data)
+                            sagyome_col_text = current_sub_table_work_name_internal
+                            final_table_classification = TABLE_TYPE_HYO if re.match(r'^表', hyo_col_text) else TABLE_TYPE_BETSU_HYO
+
+                        df = create_dataframe_from_rows(current_sub_table_rows, hyo_col_text, sagyome_col_text, current_sub_table_note)
                         if df is not None:
-                            extracted_dfs.append(df)
-                    
-                    # Reset all state for new table potential
-                    current_sub_table_rows = [] 
+                            extracted_dfs.append({'df': df, 'table_type': final_table_classification})
+
+                    current_sub_table_rows = []
                     building_sub_table = False
-                    current_sub_table_work_name = "" # Reset work name for the next potential table
+                    current_sub_table_work_name_internal = ""
+                    current_sub_table_note = ""
                     found_hyo_marker_row_data = None
                     row_after_hyo_row_data = None
-                    is_split_sub_table = True # Subsequent tables *after* this note are "split"
-                    continue # Skip the note row
+                    is_split_by_marker = False
+                    break
 
-                # --- Logic for handling "表" marker and looking two rows ahead ---
-                # This block activates if a "表" row was found in a previous iteration
+                if starts_with_hyo_betsu_hyo_in_row:
+                    if building_sub_table and current_sub_table_rows:
+                        hyo_col_text_prev = initial_hyo_col_text
+                        sagyome_col_text_prev = initial_sagyome_col_text
+                        final_table_classification_prev = initial_table_classification
+
+                        if is_split_by_marker:
+                            hyo_col_text_prev = "".join(found_hyo_marker_row_data)
+                            sagyome_col_text_prev = current_sub_table_work_name_internal
+                            final_table_classification_prev = TABLE_TYPE_HYO if re.match(r'^表', hyo_col_text_prev) else TABLE_TYPE_BETSU_HYO
+
+                        df = create_dataframe_from_rows(current_sub_table_rows, hyo_col_text_prev, sagyome_col_text_prev, current_sub_table_note)
+                        if df is not None:
+                            extracted_dfs.append({'df': df, 'table_type': final_table_classification_prev})
+
+                    current_sub_table_rows = []
+                    building_sub_table = False
+                    current_sub_table_work_name_internal = ""
+                    current_sub_table_note = ""
+                    found_hyo_marker_row_data = row_data
+                    row_after_hyo_row_data = None
+                    is_split_by_marker = True
+                    continue
+
                 if found_hyo_marker_row_data is not None:
                     if row_after_hyo_row_data is None:
-                        # We just passed "表", so this is "Row A" (immediately after "表")
                         row_after_hyo_row_data = row_data
-                        continue # Move to "Row B" in the next iteration
+                        continue
                     else:
-                        # We have "表" (found_hyo_marker_row_data), "Row A" (row_after_hyo_row_data),
-                        # and now this is "Row B" (current row_data).
-                        
-                        # Finalize any previously built table segment before starting new one
-                        if building_sub_table and current_sub_table_rows:
-                            df = create_dataframe_from_rows(current_sub_table_rows, current_sub_table_work_name)
-                            if df is not None:
-                                extracted_dfs.append(df)
-                        
-                        # --- Determine header and work_name for the *new* table based on "Row B" ---
-                        new_table_header = []
-                        new_table_work_name = ""
+                        new_table_header = row_data if "単位" in combined_row_text else row_after_hyo_row_data
+                        new_table_work_name = "".join(row_after_hyo_row_data) if "単位" in combined_row_text else ""
 
-                        # Rule 1: If "Row B" contains "単位"
-                        if "単位" in combined_row_text:
-                            new_table_header = row_data # "Row B" is the header
-                            new_table_work_name = "".join(row_after_hyo_row_data) # "Row A" is the work name
-                        else:
-                            # Rule 2: "Row B" does NOT contain "単位"
-                            new_table_header = row_after_hyo_row_data # "Row A" is the header
-                            new_table_work_name = "" # Work name is empty
-                        
-                        # --- Start the new sub-table ---
-                        current_sub_table_rows = [new_table_header] # Initialize with the determined header
-                        current_sub_table_work_name = new_table_work_name # Store its specific work name
-                        building_sub_table = True # Now building this new table
-                        is_split_sub_table = True # This table is a split one
-                        
-                        # Reset buffers for "表" sequence
+                        current_sub_table_rows = [new_table_header]
+                        current_sub_table_work_name_internal = new_table_work_name
+                        current_sub_table_note = ""
+                        building_sub_table = True
+
                         found_hyo_marker_row_data = None
                         row_after_hyo_row_data = None
-                        
-                        continue # This row was processed as a header, move to next
-                        
-                # --- Condition 3: Check if this row is the "表" marker itself ---
-                if "表" in combined_row_text:
-                    # If we were building a table *before* this "表" marker, finalize it
-                    if building_sub_table and current_sub_table_rows:
-                        df = create_dataframe_from_rows(current_sub_table_rows, current_sub_table_work_name)
-                        if df is not None:
-                            extracted_dfs.append(df)
-                        
-                    # Prepare for the "表" lookahead sequence
-                    current_sub_table_rows = [] # Reset for the table that will start *after* this marker
-                    building_sub_table = False # Stop building for now, await new header
-                    current_sub_table_work_name = "" # Reset work name for the new table sequence
-                    found_hyo_marker_row_data = row_data # Store the "表" row itself
-                    row_after_hyo_row_data = None # Clear Row A buffer
-                    is_split_sub_table = True # Any subsequent tables are now considered "split"
-                    continue # Skip this "表" marker row
+                        continue
 
-                # --- Condition 4: Default behavior - start or add row to current sub-table ---
-                # If we are not building a table, and no "表" sequence is active,
-                # this is the first row of a new table segment
                 if not building_sub_table and found_hyo_marker_row_data is None and row_after_hyo_row_data is None:
-                    # This implies it's the very first row of the first sub-table
-                    # found within a docx.table.Table element that doesn't follow a marker.
-                    current_sub_table_rows = [row_data] # This row is the header
-                    current_sub_table_work_name = current_docx_table_preceding_text # Use the paragraph text
+                    current_sub_table_rows = [row_data]
+                    current_sub_table_work_name_internal = initial_sagyome_col_text
+                    current_sub_table_note = ""
                     building_sub_table = True
-                    is_split_sub_table = False # Not a split table (initial table segment)
-                    continue # This row is processed as header
+                    is_split_by_marker = False
+                    continue
 
-                # If building_sub_table is True, just append the row
                 if building_sub_table:
                     current_sub_table_rows.append(row_data)
-            
-            # After iterating all rows in a docx.table.Table, if there's any remaining data, save it
+
             if building_sub_table and current_sub_table_rows:
-                # Finalize the last table segment using its associated work name
-                df = create_dataframe_from_rows(current_sub_table_rows, current_sub_table_work_name)
+                hyo_col_text_last = initial_hyo_col_text
+                sagyome_col_text_last = initial_sagyome_col_text
+                final_table_classification_last = initial_table_classification
+
+                if is_split_by_marker and found_hyo_marker_row_data:
+                    hyo_col_text_last = "".join(found_hyo_marker_row_data)
+                    sagyome_col_text_last = current_sub_table_work_name_internal
+                    final_table_classification_last = TABLE_TYPE_HYO if re.match(r'^表', hyo_col_text_last) else TABLE_TYPE_BETSU_HYO
+
+                df = create_dataframe_from_rows(current_sub_table_rows, hyo_col_text_last, sagyome_col_text_last, current_sub_table_note)
                 if df is not None:
-                    extracted_dfs.append(df)
+                    extracted_dfs.append({'df': df, 'table_type': final_table_classification_last})
 
     return extracted_dfs
 
-def create_dataframe_from_rows(rows, preceding_text):
-    """Helper function to create a DataFrame from a list of rows."""
+
+def create_dataframe_from_rows(rows, hyo_col_text, sagyome_col_text, note_text):
+    """
+    ヘルパー関数: 行のリストからDataFrameを作成します。
+    「表列」と「作業名列」と「注」カラムを追加します。
+    """
     if not rows:
         return None
 
     headers = rows[0]
     rows_data = rows[1:]
 
-    final_headers = ['作業名'] + headers 
+    # ヘッダーの初期設定
+    final_headers = []
+    
+    # 「表列」と「作業名列」の追加ルールに従ってヘッダーを構築
+    if hyo_col_text: # 「表列」を追加する場合
+        final_headers.append('表')
+        if sagyome_col_text: # 「作業名列」も追加する場合
+            final_headers.append('作業名')
+    elif sagyome_col_text: # 「表列」はないが「作業名列」を追加する場合 (このパスは今回のロジックでは発生しないはずだが念のため)
+        final_headers.append('作業名')
+
+    final_headers.extend(headers) # 元のヘッダーを追加
+
+    # 注釈カラムが既になければ追加
+    if '注' not in final_headers and note_text is not None:
+        final_headers.append('注')
     
     processed_rows_data = []
     for row in rows_data:
-        processed_rows_data.append([preceding_text] + row)
+        current_row_processed = []
+        if hyo_col_text:
+            current_row_processed.append(hyo_col_text)
+            if sagyome_col_text:
+                current_row_processed.append(sagyome_col_text)
+        elif sagyome_col_text: # 「表列」はないが「作業名列」を追加する場合
+            current_row_processed.append(sagyome_col_text)
+
+        current_row_processed.extend(row) # 元の行データを追加
+        current_row_processed.append(note_text) # 注を追加
+
+        processed_rows_data.append(current_row_processed)
             
-    max_cols = max(len(final_headers), max(len(row) for row in processed_rows_data) if processed_rows_data else 0)
+    # 全ての行とヘッダーで最大の列数を取得し、列数を揃える
+    max_cols = len(final_headers)
+    if processed_rows_data:
+        max_cols = max(max_cols, max(len(r) for r in processed_rows_data))
     
+    # final_headers の長さを max_cols に合わせる
     final_headers = final_headers + [''] * (max_cols - len(final_headers))
 
+    # processed_rows_data の各行の長さを max_cols に合わせる
     adjusted_rows_data = []
-    for row in processed_rows_data:
-        adjusted_rows_data.append(row + [''] * (max_cols - len(row)))
+    for row_data_entry in processed_rows_data:
+        adjusted_rows_data.append(row_data_entry + [''] * (max_cols - len(row_data_entry)))
 
     df = pd.DataFrame(adjusted_rows_data, columns=final_headers)
     return df
 
-def save_dfs_to_csv(dfs, output_dir, page_number):
+def save_dfs_to_csv(dfs_info, output_dir, page_number):
     """
-    DataFrameのリストを個別のCSVファイルとして保存します。
+    DataFrameのリスト（とそれに関連する情報）を個別のCSVファイルとして保存します。
     ファイル名は「ページ番号-表の連番.csv」となります。
+    table_typeに応じてサブディレクトリを作成します。
     """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-        print(f"Created output directory: {output_dir}")
+        print(f"Created base output directory: {output_dir}")
 
-    for i, df in enumerate(dfs):
+    for i, df_info in enumerate(dfs_info):
+        df = df_info['df']
+        table_type = df_info['table_type'] 
+
+        specific_output_dir = output_dir
+        if table_type == TABLE_TYPE_HYO:
+            specific_output_dir = os.path.join(output_dir, "hyo")
+        elif table_type == TABLE_TYPE_BETSU_HYO:
+            specific_output_dir = os.path.join(output_dir, "betsu_hyo")
+        elif table_type == TABLE_TYPE_NO_SPECIFIC_HEADER: # 表列/作業名列を追加しなかった表用
+            specific_output_dir = os.path.join(output_dir, "other_no_explicit_headers")
+        else: # その他のデフォルト（表列・作業名列がついたother_tablesもここに入る可能性があるが、今回は明確な振り分けを優先）
+            specific_output_dir = os.path.join(output_dir, "misc_tables")
+
+
+        if not os.path.exists(specific_output_dir):
+            os.makedirs(specific_output_dir)
+            print(f"Created output directory: {specific_output_dir}")
+
         csv_file_name = f"{page_number}-{i+1}.csv"
-        csv_file_path = os.path.join(output_dir, csv_file_name)
+        csv_file_path = os.path.join(specific_output_dir, csv_file_name)
         
         df.to_csv(csv_file_path, index=False, header=True, encoding='utf-8')
-        print(f"Table from page {page_number}, sub-table {i+1} saved to {csv_file_path}")
+        print(f"Table from page {page_number}, sub-table {i+1} saved to {csv_file_path} in '{table_type}' folder.")
 
 
 if __name__ == "__main__":
-    input_folder_path = "../data/word"  # Your folder containing DOCX files
-    output_folder_path = "../tables_from_docx" # Output directory for CSVs
+    input_folder_path = "../data/word"  # DOCXファイルを含むフォルダ
+    base_output_folder_path = "../tables_from_docx" # CSV出力のベースディレクトリ
 
     if not os.path.exists(input_folder_path):
         print(f"エラー: 入力フォルダ '{input_folder_path}' が見つかりません。")
@@ -219,11 +301,11 @@ if __name__ == "__main__":
                 page_number = match.group(1) if match else "unknown_page"
                 
                 print(f"\nProcessing '{docx_file_name}' (Page {page_number})...")
-                extracted_tables = extract_tables_from_docx(docx_path)
+                extracted_tables_with_types = extract_tables_from_docx(docx_path) 
                 
-                if extracted_tables:
-                    save_dfs_to_csv(extracted_tables, output_folder_path, page_number)
-                    total_extracted_tables += len(extracted_tables)
+                if extracted_tables_with_types:
+                    save_dfs_to_csv(extracted_tables_with_types, base_output_folder_path, page_number)
+                    total_extracted_tables += len(extracted_tables_with_types)
                 else:
                     print(f"ページ {page_number} のDOCXファイル内に表が見つかりませんでした。")
             
