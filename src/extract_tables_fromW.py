@@ -281,7 +281,7 @@ def save_dfs_to_csv(dfs_info, output_dir, page_number):
 
 if __name__ == "__main__":
     input_folder_path = "../data/word"  # DOCXファイルを含むフォルダ
-    base_output_folder_path = "../tables_from_docx" # CSV出力のベースディレクトリ
+    base_output_folder_path = "../data/tables_from_docx" # CSV出力のベースディレクトリ
 
     if not os.path.exists(input_folder_path):
         print(f"エラー: 入力フォルダ '{input_folder_path}' が見つかりません。")

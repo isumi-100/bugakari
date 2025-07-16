@@ -10,6 +10,7 @@ def clean_cell_spaces(df):
     """
     各セルの全角・半角スペースを削除
     """
+    df.columns = [re.sub(r'[ 　]+', '', col) if isinstance(col, str) else col for col in df.columns]
     return df.applymap(lambda x: re.sub(r'[ 　]+', '', x) if isinstance(x, str) else x)
 
 def process_csv_file(file_path):
@@ -56,7 +57,7 @@ def process_all_csvs(root_folder):
 
 # 実行部分
 if __name__ == "__main__":
-    input_folder = "../tables_from_docx"
+    input_folder = "../data/tables_from_docx"
     
     if not os.path.exists(input_folder):
         os.makedirs(input_folder)
