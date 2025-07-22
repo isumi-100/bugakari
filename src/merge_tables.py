@@ -36,16 +36,19 @@ def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower() for text in re.split('([0-9]+)', s)]
 
 # 特殊なGroup1形式のCSVを処理する関数（単一列の変換と作業名へのマージ）
-def handle_special_group1_case(df_original, file_path, expected_base_columns):
+def handle_special_group1_case(df_original, file_path, expected_base_columns, name_aliases, final_group1_output_columns):
     """
     特定の列構造を持つDataFrameをGroup1形式に変換します。
     この関数は、'単位'と'備考'の間に単一の、'所要量'ではない列が存在する場合に適用されます。
     その列名を'作業名'にマージし、列を'所要量'にリネームします。
+    また、'名称'列が'細目'として存在する場合も処理します。
 
     Args:
         df_original (pd.DataFrame): 処理対象の元のDataFrame。
         file_path (str): 処理中のファイルのパス（ログ出力用）。
         expected_base_columns (list): 期待される基本列名のリスト。
+        name_aliases (list): '名称'列として許容される列名のリスト（例: ['名称', '細目']）。
+        final_group1_output_columns (list): 最終的にGroup1として出力されるべき列の厳密なリスト。
 
     Returns:
         tuple: (変換されたDataFrame, エラーメッセージ)。
@@ -54,71 +57,111 @@ def handle_special_group1_case(df_original, file_path, expected_base_columns):
     df = df_original.copy() # オリジナルCSVは編集しないため、DataFrameのコピーを操作
     col_list = df.columns.tolist()
 
+    # まず、name_aliasesに含まれる列があれば、それを'名称'にリネーム
+    renamed = False
+    for alias in name_aliases:
+        if alias in col_list and alias != '名称':
+            # Check if '名称' is already present
+            if '名称' in col_list:
+                return None, f"'{alias}'と'名称'の両方が存在します。"
+            df = df.rename(columns={alias: '名称'})
+            col_list = df.columns.tolist() # 列名リストを更新
+            renamed = True
+            break # 最初のマッチしたエイリアスのみ処理
+
     # 期待される列のプレフィックスとサフィックスを定義
-    expected_prefix_cols = expected_base_columns[0:5] # ['表', '作業名', '名称', '摘要', '単位']
-    expected_suffix_col = expected_base_columns[6] # '備考'
+    # '名称'がエイリアスから来る可能性があるので、expected_base_columnsから動的に生成
+    # e.g., ['表', '作業名', '名称', '摘要', '単位', '所要量', '備考']
+    expected_prefix_cols = ['表', '作業名', '名称', '摘要', '単位']
+    expected_suffix_col = '備考'
 
     # 1. 最小限の列数と主要な列の存在チェック
-    if not ('単位' in col_list and '備考' in col_list and '作業名' in col_list and '表' in col_list):
-        return None, "必要な列('表', '作業名', '単位', '備考')が見つかりません。"
+    if not all(col in col_list for col in ['表', '作業名', '名称', '単位', '備考']):
+        return None, "必要な列('表', '作業名', '名称', '単位', '備考')が見つかりません。"
 
-    # 2. プレフィックス列が期待されるものと一致するかチェック
-    if col_list[0:5] != expected_prefix_cols:
-        return None, "プレフィックス列が期待されるものと一致しません。"
+    # 2. プレフィックス列が期待されるものと一致するかチェック（'名称'は動的に判定後）
+    # 列順の厳密なチェック: '表', '作業名', (名称 or 細目), '摘要', '単位'
+    # 現在の列リストから、expected_prefix_colsに対応する部分を抽出して比較
+    
+    # '名称'列の実際の位置を探す
+    name_col_idx = -1
+    for alias in name_aliases:
+        if alias in col_list:
+            name_col_idx = col_list.index(alias)
+            break
+    
+    if name_col_idx == -1: # '名称'またはエイリアスが見つからない
+        return None, "想定される名称列 ('名称' または '細目') が見つかりません。"
 
-    # 3. '備考'列が期待される位置（インデックス6）にあるかチェック
-    if len(col_list) <= 6 or col_list[6] != expected_suffix_col:
-        return None, "'備考'列が期待される位置にありません。"
+    # 期待されるプレフィックスの順序を動的に構築
+    # '表', '作業名', '名称', '摘要', '単位' の順であるか確認
+    if not (len(col_list) > name_col_idx + 2 and
+            col_list[0] == '表' and
+            col_list[1] == '作業名' and
+            col_list[name_col_idx] == '名称' and # 既にリネーム済み
+            col_list[name_col_idx + 1] == '摘要' and
+            col_list[name_col_idx + 2] == '単位'):
+        return None, "プレフィックス列の順序が期待されるものと一致しません。"
+
+
+    # 3. '備考'列が期待される位置にあるかチェック
+    # '名称'を基準に相対位置を計算
+    if not ('備考' in col_list):
+        return None, "'備考'列が見つかりません。"
+    
+    idx_unit = col_list.index('単位')
+    idx_remarks = col_list.index('備考')
+
+    if not (idx_remarks > idx_unit): # '備考'が'単位'より後にあるか
+        return None, "'備考'列が'単位'列より前にあります。"
 
     # 4. インデックス5の列が'所要量'ではないかチェック (単一列展開の条件)
-    col_to_merge_name = col_list[5]
+    # idx_unit + 1 の位置が単一列の候補
+    col_to_merge_name_idx = idx_unit + 1
+    if col_to_merge_name_idx >= idx_remarks: # '単位'と'備考'の間に列がない、または複数列の場合もここで弾かれる
+        return None, "'単位'と'備考'の間に単一の列がありません。"
+    
+    col_to_merge_name = col_list[col_to_merge_name_idx]
+
     if col_to_merge_name == '所要量':
         return None, "インデックス5の列は既に'所要量'です（特殊ケースではありません）。"
     
-    # 5. '単位'と'備考'の間に他の列がないかチェック (単一列展開の条件)
-    try:
-        idx_unit = col_list.index('単位')
-        idx_remarks = col_list.index('備考')
-        if not (idx_remarks - idx_unit - 1 == 1): # '単位'と'備考'の間に1つだけ列があることを確認
-            return None, "'単位'と'備考'の間に単一の列がありません。"
-    except ValueError:
-        return None, "'単位'または'備考'列のインデックスが見つかりません。"
+    # 5. '単位'と'備考'の間に単一の列があるか最終チェック
+    if not (idx_remarks - idx_unit - 1 == 1):
+        return None, "'単位'と'備考'の間に単一の列がありません。"
+
 
     # 全ての条件を満たした場合、変換処理を実行
-    # print(f"  > 特殊なGroup1形式の変換を適用中 (単一列展開): {file_path}") # メインループで出力
+    if renamed:
+        print(f"   > '細目'列を'名称'にリネームしました。")
+    print(f"   > 特殊なGroup1形式の変換を適用中 (単一列展開): {os.path.basename(file_path)}")
 
     # 該当する列名を作業列名のセルに文字列マージ
-    df['作業名'] = df['作業名'].astype(str) + col_to_merge_name
+    # 変更点: 列名ではなく、その列の値をマージ
+    df['作業名'] = df['作業名'].astype(str) + df[col_to_merge_name].astype(str) 
 
     # 該当する列名を'所要量'にリネーム
     df = df.rename(columns={col_to_merge_name: '所要量'})
 
-    # 列の順序をexpected_base_columnsに合わせ、残りの列は末尾に配置
-    current_cols = df.columns.tolist()
-    ordered_cols = []
-    
-    for col in expected_base_columns:
-        if col in current_cols:
-            ordered_cols.append(col)
-    
-    for col in current_cols:
-        if col not in expected_base_columns and col not in ordered_cols:
-            ordered_cols.append(col)
-            
-    df = df[ordered_cols]
+    # 最終的な列の選択と順序付け
+    # final_group1_output_columns に含まれない列はここで削除される
+    df_final = df.reindex(columns=final_group1_output_columns, fill_value='')
 
-    return df, None # 変換されたDataFrameとエラーなしを返す
+    return df_final, None # 変換されたDataFrameとエラーなしを返す
 
 # 複数列を展開して行に変換する特殊なGroup1形式のCSVを処理する関数
-def handle_multi_column_expansion_case(df_original, file_path, expected_base_columns):
+def handle_multi_column_expansion_case(df_original, file_path, expected_base_columns, name_aliases, final_group1_output_columns):
     """
     '単位'と'備考'の間に複数の所要量相当の列があるDataFrameを、
     それらの列を展開して行に変換し、'作業名'に列名をマージする形式に変換します。
+    また、'名称'列が'細目'として存在する場合も処理します。
 
     Args:
         df_original (pd.DataFrame): 処理対象の元のDataFrame。
         file_path (str): 処理中のファイルのパス（ログ出力用）。
         expected_base_columns (list): 期待される基本列名のリスト。
+        name_aliases (list): '名称'列として許容される列名のリスト（例: ['名称', '細目']）。
+        final_group1_output_columns (list): 最終的にGroup1として出力されるべき列の厳密なリスト。
 
     Returns:
         tuple: (変換されたDataFrame, エラーメッセージ)。
@@ -127,17 +170,28 @@ def handle_multi_column_expansion_case(df_original, file_path, expected_base_col
     df = df_original.copy()
     col_list = df.columns.tolist()
 
+    # まず、name_aliasesに含まれる列があれば、それを'名称'にリネーム
+    renamed = False
+    for alias in name_aliases:
+        if alias in col_list and alias != '名称':
+            if '名称' in col_list:
+                return None, f"'{alias}'と'名称'の両方が存在します。"
+            df = df.rename(columns={alias: '名称'})
+            col_list = df.columns.tolist() # 列名リストを更新
+            renamed = True
+            break # 最初のマッチしたエイリアスのみ処理
+
     # 期待される基本列のプレフィックスとサフィックス
-    expected_prefix_cols = expected_base_columns[0:5] # ['表', '作業名', '名称', '摘要', '単位']
-    expected_suffix_col = expected_base_columns[6] # '備考'
+    expected_prefix_cols = ['表', '作業名', '名称', '摘要', '単位']
+    expected_suffix_col = '備考'
 
     # 1. '所要量'列が既に存在しないかチェック
     if '所要量' in col_list:
         return None, "DataFrameに既に'所要量'列が存在します。"
 
     # 2. 必要な主要列の存在と列数のチェック
-    if not ('単位' in col_list and '備考' in col_list and '作業名' in col_list and '表' in col_list):
-        return None, "必要な列('表', '作業名', '単位', '備考')が見つかりません。"
+    if not all(col in col_list for col in ['表', '作業名', '名称', '単位', '備考']):
+        return None, "必要な列('表', '作業名', '名称', '単位', '備考')が見つかりません。"
 
     try:
         idx_unit = col_list.index('単位')
@@ -149,22 +203,39 @@ def handle_multi_column_expansion_case(df_original, file_path, expected_base_col
     if not (idx_unit < idx_remarks - 1 and (idx_remarks - idx_unit - 1) > 1):
         return None, "'単位'と'備考'の間に複数の列がありません。"
 
-    # 4. プレフィックス列が期待されるものと一致するかチェック
-    if col_list[0:5] != expected_prefix_cols:
-        return None, "プレフィックス列が期待されるものと一致しません。"
-        
+    # 4. プレフィックス列が期待されるものと一致するかチェック（'名称'は動的に判定後）
+    # '名称'列の実際の位置を探す
+    name_col_idx = -1
+    for alias in name_aliases:
+        if alias in col_list:
+            name_col_idx = col_list.index(alias)
+            break
+    
+    if name_col_idx == -1: # '名称'またはエイリアスが見つからない
+        return None, "想定される名称列 ('名称' または '細目') が見つかりません。"
+
+    # 期待されるプレフィックスの順序を動的に構築
+    # '表', '作業名', '名称', '摘要', '単位' の順であるか確認
+    if not (len(col_list) > name_col_idx + 2 and
+            col_list[0] == '表' and
+            col_list[1] == '作業名' and
+            col_list[name_col_idx] == '名称' and # 既にリネーム済み
+            col_list[name_col_idx + 1] == '摘要' and
+            col_list[name_col_idx + 2] == '単位'):
+        return None, "プレフィックス列の順序が期待されるものと一致しません。"
+
+    if renamed:
+        print(f"   > '細目'列を'名称'にリネームしました。")
+    print(f"   > 特殊なGroup1形式の変換を適用中 (複数列展開): {os.path.basename(file_path)}")
+
     # 展開対象となる列（'単位'と'備考'の間の列）を特定
     columns_to_melt = col_list[idx_unit + 1 : idx_remarks]
     
-    # 展開対象列が全て数字に変換できるか（空文字列はNaNになり得るので考慮）
-    # is_numeric = df[columns_to_melt].apply(lambda s: pd.to_numeric(s, errors='coerce').notna().all()).all()
-    # if not is_numeric:
-    #     return None, "展開対象列に数値に変換できない値が含まれています。"
-
-    # print(f"  > 特殊なGroup1形式の変換を適用中 (複数列展開): {file_path}") # メインループで出力
-
     # ID列として残す列（展開しない列）
-    id_vars = col_list[0:idx_unit+1] + col_list[idx_remarks:] # '単位'までと'備考'以降の列
+    # '注'列が最終的に必要な場合は、ここでid_varsに含める必要がある
+    # ただし、最終的にfinal_group1_output_columnsで選択するので、ここで厳密に定義する必要はない
+    # '単位'までと'備考'以降の列（ただし、備考以降の列は最終的にfinal_group1_output_columnsでフィルタリングされる）
+    id_vars = col_list[0:idx_unit+1] + col_list[idx_remarks:] 
 
     # melt（展開）処理
     df_melted = df.melt(id_vars=id_vars,
@@ -178,21 +249,11 @@ def handle_multi_column_expansion_case(df_original, file_path, expected_base_col
     # 不要になった一時列を削除
     df_melted = df_melted.drop(columns=['展開列名'])
 
-    # 列の順序をexpected_base_columnsに合わせ、残りの列は末尾に配置
-    current_cols_melted = df_melted.columns.tolist()
-    ordered_cols = []
-    
-    for col in expected_base_columns:
-        if col in current_cols_melted:
-            ordered_cols.append(col)
-    
-    for col in current_cols_melted:
-        if col not in expected_base_columns and col not in ordered_cols:
-            ordered_cols.append(col)
-            
-    df_melted = df_melted[ordered_cols]
+    # 最終的な列の選択と順序付け
+    # final_group1_output_columns に含まれない列はここで削除される
+    df_final = df_melted.reindex(columns=final_group1_output_columns, fill_value='')
 
-    return df_melted, None # 変換されたDataFrameとエラーなしを返す
+    return df_final, None # 変換されたDataFrameとエラーなしを返す
 
 
 # ネストされたCSVファイルを処理し、グループ分けとマージを行う関数
@@ -209,11 +270,18 @@ def process_nested_csvs(root_folder, output_combined_main_csv_path, output_combi
     group3_files = [] # その他のファイル + エラーファイル
     group4_files = [] # カラム名はGroup1の構造に合うが、'表'列が'表'でも'別表'でもないファイル
 
-    # 期待される基本列の定義
+    # 期待される基本列の定義（変換前のチェック用）
     expected_base_columns = ['表', '作業名', '名称', '摘要', '単位', '所要量','備考']
-    # Group2の最小限の必須列の定義
-    min_group2_columns = set(['名称', '摘要', '単位', '所要量','備考'])
+    # '名称'列として許容されるエイリアス
+    name_aliases = ['名称', '細目']
+    # 最終的にGroup1として出力されるべき列の厳密なリスト
+    # '注'列も最終出力に含める
+    final_group1_output_columns = ['表', '作業名', '名称', '摘要', '単位', '所要量', '備考', '注']
 
+    # Group2の最小限の必須列の定義
+    # '名称'の代わりに'細目'も許容するよう調整
+    min_group2_columns = set(['摘要', '単位', '所要量', '備考'])
+    
     all_csv_paths = []
 
     # root_folder以下の全てのCSVファイルのパスを収集
@@ -249,17 +317,65 @@ def process_nested_csvs(root_folder, output_combined_main_csv_path, output_combi
             is_classified_as_group1 = False
             
             # --- Group 1 の分類ロジック ---
-            # 1. 厳密なGroup1の列構造を試す
-            if len(col_list) >= 7 and col_list[:7] == expected_base_columns:
-                if current_table_id_prefix and is_valid_table_id_pattern(df['表'], current_table_id_prefix):
-                    print(f"Group1 ({current_table_id_prefix} - 厳密な一致): {file_path}")
-                    target_dfs_list = group1_main_dfs if current_table_id_prefix == '表' else group1_annex_dfs
-                    target_dfs_list.append((df, file_path))
-                    is_classified_as_group1 = True
+            # 1. 厳密なGroup1の列構造を試す (名称エイリアスを考慮)
+            # まず、名称エイリアス列があればリネームして正規化
+            df_for_check = df.copy()
+            initial_col_list = df_for_check.columns.tolist()
+            name_col_renamed = False
+            for alias in name_aliases:
+                if alias in initial_col_list and alias != '名称':
+                    if '名称' in initial_col_list:
+                        continue # '名称'とエイリアスが両方ある場合はスキップ (このケースはhandle_special_group1_case内でエラーになる)
+                    df_for_check = df_for_check.rename(columns={alias: '名称'})
+                    name_col_renamed = True
+                    break
+            
+            # リネーム後のカラムリストでチェック
+            current_cols_after_rename = df_for_check.columns.tolist()
+
+            # 厳密なGroup1チェックも'名称'のエイリアスを考慮するように調整
+            # '名称'が必須位置にあり、その後の列順が正しいかを確認
+            if '名称' in current_cols_after_rename:
+                idx_name = current_cols_after_rename.index('名称')
+                # ここでのexpected_base_columnsは、所要量が含まれる厳密な7列を想定
+                # '注'列は後のreindexで追加されるため、ここでは考慮しない
+                strict_group1_cols_for_check = ['表', '作業名', '名称', '摘要', '単位', '所要量', '備考']
+                
+                # 現在のDataFrameの列が、strict_group1_cols_for_checkの順序と一致するかをチェック
+                # ただし、元のDataFrameには'所要量'が存在しない場合もあるため、
+                # '単位'の次が'備考'で、その間に1つまたは複数の列があることを確認するロジックの方が適切
+                
+                # 簡略化された厳密なチェック: 必要な基本列が全て存在し、かつ順序が正しいか
+                # '表', '作業名', '名称', '摘要', '単位', '所要量', '備考'
+                # ここでは、df_for_checkの列がこれらの列と完全に一致するか、またはこれらをプレフィックスとして持つかを確認
+                
+                # まず、必要な列が全て存在するか
+                if all(col in current_cols_after_rename for col in strict_group1_cols_for_check):
+                    # そして、それらの列が期待される順序で並んでいるか
+                    # '表', '作業名', '名称', '摘要', '単位' の順序
+                    idx_table = current_cols_after_rename.index('表')
+                    idx_workname = current_cols_after_rename.index('作業名')
+                    idx_abstract = current_cols_after_rename.index('摘要')
+                    idx_unit_strict = current_cols_after_rename.index('単位')
+                    idx_required = current_cols_after_rename.index('所要量')
+                    idx_remarks_strict = current_cols_after_rename.index('備考')
+
+                    if (idx_table == 0 and idx_workname == 1 and idx_name == 2 and 
+                        idx_abstract == 3 and idx_unit_strict == 4 and 
+                        idx_required == 5 and idx_remarks_strict == 6):
+                        
+                        if current_table_id_prefix and is_valid_table_id_pattern(df_for_check['表'], current_table_id_prefix):
+                            print(f"Group1 ({current_table_id_prefix} - 厳密な一致{' (細目→名称リネーム)' if name_col_renamed else ''}): {file_path}")
+                            target_dfs_list = group1_main_dfs if current_table_id_prefix == '表' else group1_annex_dfs
+                            
+                            # 厳密な一致の場合も最終出力列に合わせる
+                            final_df_strict = df_for_check.reindex(columns=final_group1_output_columns, fill_value='')
+                            target_dfs_list.append((final_df_strict, file_path))
+                            is_classified_as_group1 = True
             
             # 2. 特殊なGroup1形式 (単一列の変換) を試す
             if not is_classified_as_group1:
-                modified_df, error_msg = handle_special_group1_case(df, file_path, expected_base_columns)
+                modified_df, error_msg = handle_special_group1_case(df, file_path, expected_base_columns, name_aliases, final_group1_output_columns)
                 if modified_df is not None: # 構造変換が成功した場合
                     # 変換後のDataFrameの'表'列が正しいパターンに合致するかチェック
                     if current_table_id_prefix and is_valid_table_id_pattern(modified_df['表'], current_table_id_prefix):
@@ -270,7 +386,7 @@ def process_nested_csvs(root_folder, output_combined_main_csv_path, output_combi
             
             # 3. 特殊なGroup1形式 (複数列の展開) を試す
             if not is_classified_as_group1:
-                modified_df, error_msg = handle_multi_column_expansion_case(df, file_path, expected_base_columns)
+                modified_df, error_msg = handle_multi_column_expansion_case(df, file_path, expected_base_columns, name_aliases, final_group1_output_columns)
                 if modified_df is not None: # 構造変換が成功した場合
                     # 変換後のDataFrameの'表'列が正しいパターンに合致するかチェック
                     if current_table_id_prefix and is_valid_table_id_pattern(modified_df['表'], current_table_id_prefix):
@@ -292,8 +408,17 @@ def process_nested_csvs(root_folder, output_combined_main_csv_path, output_combi
 
             # --- Group 2 条件 ---
             # Group1/Group4として分類されなかった場合のみGroup2をチェック
-            present_cols = set(col_list)
-            if len(min_group2_columns - present_cols) == 1:
+            # '名称'または'細目'が存在するかを確認
+            has_name_or_saimoku = any(alias in col_list for alias in name_aliases)
+            
+            # 必須列に加えて、'名称'または'細目'が一つだけ不足しているパターン
+            # min_group2_columns には '名称' を含まないようにし、has_name_or_saimoku で別途チェック
+            present_cols_set = set(col_list)
+            
+            # Group2は厳密にはGroup1の条件に合わないが、'名称'/'細目'およびその他の主要列がほぼ揃っているもの
+            # ここでは、'名称' (または細目) があり、かつ min_group2_columns (摘要, 単位, 所要量, 備考) が全てある場合
+            # をGroup2とする
+            if has_name_or_saimoku and min_group2_columns.issubset(present_cols_set):
                 print(f"Group2: {file_path}")
                 group2_files.append(file_path)
                 continue
@@ -337,8 +462,8 @@ def process_nested_csvs(root_folder, output_combined_main_csv_path, output_combi
         print(f" - {f}")
     print(f"Group3 (その他/エラー): {len(group3_files)} ファイル")
     # Group3のファイル名も表示したい場合は以下のコメントを外す
-    # for f in sorted(group3_files, key=natural_sort_key):
-    #     print(f" - {f}")
+    for f in sorted(group3_files, key=natural_sort_key):
+        print(f" - {f}")
 
 # 実行部分
 if __name__ == "__main__":

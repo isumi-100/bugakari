@@ -121,7 +121,7 @@ def save_dfs_to_csv(dfs_info, output_dir, file_name_prefix):
 
 if __name__ == "__main__":
     input_folder_path = "../data/excel"  # Excelファイルを含むフォルダ
-    base_output_folder_path = "../tables_from_excel_simple" # CSV出力のベースディレクトリ (新しいフォルダ名)
+    base_output_folder_path = "../data/csv" # CSV出力のベースディレクトリ (新しいフォルダ名)
 
     if not os.path.exists(input_folder_path):
         print(f"エラー: 入力フォルダ '{input_folder_path}' が見つかりません。")
